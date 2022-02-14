@@ -1,20 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
-using Xamarin.Forms.PlatformConfiguration;
+using Xamarin.Forms.Xaml;
 
 namespace AppForSafePicture
 {
     public partial class MainPage : ContentPage
     {
-        string folderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        public string pathName;
         public MainPage()
         {
             InitializeComponent();
@@ -22,14 +17,13 @@ namespace AppForSafePicture
 
         protected override void OnAppearing()
         {
+            imgList.ItemsSource = App.DB.GetAll();
             base.OnAppearing();
-            UpdateList();
         }
 
         void UpdateList()
         {
-            imgList.ItemsSource = Directory.GetFiles(folderPath).Select(f => Path.GetFullPath(f));
-            imgList.SelectedItem = 0;
+            imgList.ItemsSource = App.DB.GetAll();
         }
 
         async void GetPhotoAsync(object sender, EventArgs e)
@@ -37,7 +31,7 @@ namespace AppForSafePicture
             try
             {
                 var photo = await MediaPicker.PickPhotoAsync();
-                //img.Source = ImageSource.FromFile(photo.FullPath);
+                pathName = photo.FullPath;
             }
             catch (Exception ex)
             {
@@ -60,13 +54,30 @@ namespace AppForSafePicture
                     await stream.CopyToAsync(newStream);
 
                 Debug.WriteLine($"Путь фото {photo.FullPath}");
-                //img.Source = ImageSource.FromFile(photo.FullPath);
-                UpdateList();
+
+                pathName = photo.FullPath;
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Сообщение об ошибке", ex.Message, "OK");
             }
+        }
+
+        private void BtnAddImage_Clicked(object sender, EventArgs e)
+        {
+            CustomItem ci = new CustomItem();
+            ci.Name = ImageName.Text;
+            ci.ImagePath = pathName;
+            App.DB.SaveNew(ci);
+            UpdateList();
+        }
+
+        private async void imgList_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        {
+            CustomItem selectedImage = (CustomItem)e.SelectedItem;
+            OpenedItemPage imagePage = new OpenedItemPage();
+            imagePage.BindingContext = selectedImage;
+            await Navigation.PushAsync(imagePage);
         }
     }
 }

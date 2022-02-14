@@ -7,12 +7,12 @@ namespace AppForSafePicture
 {
     public partial class App : Application
     {
-        public const string DATABASE_NAME = "Items.db"
+        public const string DATABASE_NAME = "Items.db";
         public App()
         {
             InitializeComponent();
 
-            MainPage = new MainPage();
+            MainPage = new NavigationPage(new MainPage());
         }
         public static ItemBag db;
         public static ItemBag DB
